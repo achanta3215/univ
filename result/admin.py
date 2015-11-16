@@ -145,8 +145,19 @@ class MySuperUserForm(ModelForm):
     class Meta:
         model = Result
         fields = ['usn', 'intmarks', 'extmarks']
+        # list_display = ['usn', 'intmarks', 'extmarks']
+        # list_editable = ['usn', 'intmarks', 'extmarks']
+# class  AnalysisInline(admin.TabularInline):
+#     form = ModelForm
+#     formset = BaseInlineFormSet
+#     model = Result
+#     fields = ['usn']
+    
+
+    
 
 class CourseAdmin(admin.ModelAdmin):
+    # inlines = [ResultInline,AnalysisInline]
     inlines = [ResultInline]
     def get_formsets(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
@@ -206,8 +217,16 @@ class CourseAdmin(admin.ModelAdmin):
     # 
     #     return formsets, inline_instances
 
-class ResultAdmin(admin.ModelAdmin):
+
+
+
+class ResultAdmin(admin.ModelAdmin): 
     form = ResultForm
+    list_display = ['hello']
+    def hello(self, obj):
+        return ("%s %s" % (obj.usn, obj.intmarks))
+    hello.short_description = 'Name'
+    
 admin.site.register(Course,CourseAdmin)
 admin.site.register(Department)
 admin.site.register(Student,StudentAdmin)
