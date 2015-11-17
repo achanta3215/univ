@@ -211,9 +211,12 @@ class CourseAdmin(admin.ModelAdmin):
             if isinstance(inline, ResultInline) and obj is None:
                 continue
             yield inline.get_formset(request, obj)
-    # def  get_queryset(self, request):
-    #     qs = super(CourseAdmin,self).get_queryset(request)
-    #     return qs.none()
+    
+    def  get_queryset(self, request):
+        qs = super(CourseAdmin,self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(dname=request.user.department)
     ResultFormSet = formset_factory(ResultInline)
     # def get_form(self,request,obj=None,**kwargs ):
     #     if request.user.is_superuser:
