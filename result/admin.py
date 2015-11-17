@@ -52,8 +52,9 @@ class ListFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if request.user.is_superuser:
-            return queryset.filter(dept=self.value())
-            
+            if self.value():
+                return queryset.filter(dept=self.value())
+            return queryset
             
 class StudentAdmin(admin.ModelAdmin):
     list_filter = (ListFilter,)
@@ -66,9 +67,10 @@ class StudentAdmin(admin.ModelAdmin):
     user = get_user_model()
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "dept":
-            kwargs["initial"] = request.user.department
-            kwargs["queryset"] = Department.objects.filter(dname=request.user.department)
+        if not request.user.is_superuser:
+            if db_field.name == "dept":
+                kwargs["initial"] = request.user.department
+                kwargs["queryset"] = Department.objects.filter(dname=request.user.department)
         return super(StudentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
     # if user.is_superuser():
     #     list_filter = ('dept',)
@@ -151,8 +153,9 @@ class CustomInlineAdmin(admin.TabularInline):
         qs.filter(usn='13BT6CS004')
         return qs
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "usn":
-            kwargs["queryset"] = Student.objects.filter(dept=request.user.department)
+        if not request.user.is_superuser:
+            if db_field.name == "usn":
+                kwargs["queryset"] = Student.objects.filter(dept=request.user.department)
         return super(CustomInlineAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
     
     # def get_form(self, request, obj=None, **kwargs):
@@ -196,9 +199,10 @@ class CourseAdmin(admin.ModelAdmin):
     inlines = [ResultInline]
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "dname":
-            kwargs["initial"] = request.user.department
-            kwargs["queryset"] = Department.objects.filter(dname=request.user.department)
+        if not request.user.is_superuser:
+            if db_field.name == "dname":
+                kwargs["initial"] = request.user.department
+                kwargs["queryset"] = Department.objects.filter(dname=request.user.department)
         return super(CourseAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
     
     def get_formsets(self, request, obj=None):
@@ -266,12 +270,21 @@ class CourseAdmin(admin.ModelAdmin):
 
 class ResultAdmin(admin.ModelAdmin): #Result admin
     form = ResultForm
-    list_display = ['hello','okay']
+    list_display = ['get_usn','get_internals','get_course','okay']
     #ordering = ['usn','course']
-    def hello(self,obj):
-        return ("%s %s %s" % (obj.usn, obj.intmarks,obj.course))
-    hello.short_description = 'Name'
-    hello.admin_order_field = 'usn__usn'
+    
+    def get_usn(self,obj):
+        return ("%s" % (obj.usn))
+    get_usn.short_description = 'USN'
+    
+    def get_internals(self,obj):
+        return("%s"%(obj.intmarks))
+    get_internals.short_description = 'INTERNALS'
+    
+    def get_course(self, obj):
+        return("%s"%(obj.course))
+    get_course.short_description = 'COURSE'
+    
     def get_queryset(self, request):
         qs = super(ResultAdmin, self).get_queryset(request)
         #validUsn = Student.objects.values_list('usn').filter(dept=request.user.department)
