@@ -114,7 +114,16 @@ class CustomModelForm(ModelForm):
     """
     Custom model form that support initial data when save
     """
-
+    def __init__(self, *args, **kwargs):
+        #self.user = user
+        self.request = kwargs.pop('request', None)
+        super(CustomModelForm, self).__init__(*args, **kwargs)
+        #validUsn = Student.objects.values_list('usn').filter(dept=self.request.user.department)
+        # self.get_queryset.filter(usn=validUsn)
+       # self.fields['usn'].queryset = Result.objects.filter(usn='13BT6CS004')
+        
+        # return qs
+    
     def has_changed(self):
         """
         Returns True if we have initial data.
@@ -130,6 +139,26 @@ class CustomInlineAdmin(admin.TabularInline):
     """
     form = CustomModelForm
     formset = CustomInlineFormset
+    ordering=['usn']
+    def  get_queryset(self, request):
+        qs = super(CustomInlineAdmin,self).get_queryset(request)
+        qs.filter(usn='13BT6CS004')
+        return qs
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "usn":
+            kwargs["queryset"] = Student.objects.filter(dept=request.user.department)
+        return super(CustomInlineAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    # def get_form(self, request, obj=None, **kwargs):
+    # 
+    #     AdminForm = super(CustomInlineAdmin, self).get_form(request, obj, **kwargs)
+    # 
+    #     class AdminFormWithRequest(AdminForm):
+    #         def __new__(cls, *args, **kwargs):
+    #             kwargs['request'] = request
+    #             return AdminForm(*args, **kwargs)
+    # 
+    #     return AdminFormWithRequest
 #     (initial=[{'usn': '13BT6CS004'}])
 
 
@@ -159,6 +188,7 @@ class MySuperUserForm(ModelForm):
 class CourseAdmin(admin.ModelAdmin):
     # inlines = [ResultInline,AnalysisInline]
     inlines = [ResultInline]
+   
     def get_formsets(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
             # hide MyInline in the add view
@@ -222,10 +252,24 @@ class CourseAdmin(admin.ModelAdmin):
 
 class ResultAdmin(admin.ModelAdmin): 
     form = ResultForm
-    list_display = ['hello']
-    def hello(self, obj):
-        return ("%s %s" % (obj.usn, obj.intmarks))
+    list_display = ['hello','okay']
+    #ordering = ['usn','course']
+    def hello(self,obj):
+        return ("%s %s %s" % (obj.usn, obj.intmarks,obj.course))
     hello.short_description = 'Name'
+    hello.admin_order_field = 'usn__usn'
+    def get_queryset(self, request):
+        qs = super(ResultAdmin, self).get_queryset(request)
+        #validUsn = Student.objects.values_list('usn').filter(dept=request.user.department)
+        #qs = qs.filter(usn='13BT6CS004')
+        qs = qs.order_by('usn')
+        #qs = qs.filter(usn='13BT6CS001')
+        return qs
+    
+    def okay(self,obj):
+        return False
+    okay.boolean=True
+    okay.short_description = 'Name'
     
 admin.site.register(Course,CourseAdmin)
 admin.site.register(Department)

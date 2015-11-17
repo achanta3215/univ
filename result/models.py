@@ -51,12 +51,13 @@ class Result(models.Model):
     course = models.ForeignKey(Course)
     intmarks = models.IntegerField()
     extmarks = models.IntegerField()
+    
     class Meta:
         unique_together = ("usn", "course")
     
     def publish(self):
         self.save()
     def __str__(self):
-        return self.usn.sname
+        return self.usn.usn
 
     

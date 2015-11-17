@@ -6,6 +6,9 @@ class ResultForm(ModelForm):
     def __init__(self, *args, **kwargs):
         #self.user = user
         super(ResultForm, self).__init__(*args, **kwargs)
+        # self.get_queryset.filter(usn='13BT6CS004')
+        self.fields['usn'].queryset = Result.objects.filter(usn='13BT6CS004')
+        # self.fields['usn'].get_queryset.filter(usn='13BT6CS004')
         self.fields['usn'].initial = '13BT6CS004'
         #self.fields['email'].initial = user.email
     
