@@ -37,7 +37,7 @@ class Student(models.Model):
 class Course(models.Model):
     cname = models.CharField(max_length=200)
     code = models.CharField(max_length=200,primary_key=True)
-    dept = models.ForeignKey(Department)
+    dname = models.ForeignKey(Department)
     sem = models.IntegerField()
     
     def publish(self):

@@ -64,6 +64,12 @@ class StudentAdmin(admin.ModelAdmin):
     search_fields = ('usn','sname',)
     list_display = ['usn','sname']
     user = get_user_model()
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "dept":
+            kwargs["initial"] = request.user.department
+            kwargs["queryset"] = Department.objects.filter(dname=request.user.department)
+        return super(StudentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
     # if user.is_superuser():
     #     list_filter = ('dept',)
     # # fieldsets = (
@@ -188,14 +194,22 @@ class MySuperUserForm(ModelForm):
 class CourseAdmin(admin.ModelAdmin):
     # inlines = [ResultInline,AnalysisInline]
     inlines = [ResultInline]
-   
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "dname":
+            kwargs["initial"] = request.user.department
+            kwargs["queryset"] = Department.objects.filter(dname=request.user.department)
+        return super(CourseAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
     def get_formsets(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
             # hide MyInline in the add view
             if isinstance(inline, ResultInline) and obj is None:
                 continue
             yield inline.get_formset(request, obj)
-    
+    # def  get_queryset(self, request):
+    #     qs = super(CourseAdmin,self).get_queryset(request)
+    #     return qs.none()
     ResultFormSet = formset_factory(ResultInline)
     # def get_form(self,request,obj=None,**kwargs ):
     #     if request.user.is_superuser:
@@ -250,7 +264,7 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 
-class ResultAdmin(admin.ModelAdmin): 
+class ResultAdmin(admin.ModelAdmin): #Result admin
     form = ResultForm
     list_display = ['hello','okay']
     #ordering = ['usn','course']
